@@ -1,0 +1,89 @@
+title: Checkbox组件
+description: Checkbox复选框组组件的用途、默认参数和可配置项说明
+keywords: Checkbox,复选框组,多选组件,组件配置
+category: 组件菜单类
+
+# Checkbox组件
+
+## 组件概述
+
+Checkbox是输入型组件，用于多选场景。通过复选框组的形式展示选项，支持多个选项的选择。
+
+## 组件类型
+
+type: Inputer
+component: Checkbox
+menuRootKey: inputer
+
+## 默认参数
+
+key: 空字符串（默认使用field值）
+field: 空字符串（需手动设置）
+type: Inputer
+component: Checkbox
+label: 新复选框
+hidden: false
+value: []
+componentProps:
+  options: [{value: 1, label: 选项1, disabled: false, border: true}, {value: 2, label: 选项2, disabled: false, border: true}]
+  disabled: false
+  style: 空对象
+  tag: div
+  validateEvent: true
+formItemProps:
+  noLabel: false
+  labelPosition: right
+  subLabel: 空字符串
+  autoRules: 空数组
+layoutProps:
+  span: 12
+  alone: false
+
+## 可配置项
+
+### 基本属性
+
+key: 组件唯一标识符（默认使用field值）
+field: 表单字段名，用于数据绑定（必填）
+type: 组件类型（固定为Inputer）
+component: 组件名称（固定为Checkbox）
+hidden: 是否隐藏组件
+
+### 组件属性（componentProps）
+
+value: 组件默认值（数组类型，存储选中项的value数组）
+options: 选项数组，每个选项包含value、label、disabled、border属性
+disabled: 是否禁用整个组件
+style: 自定义样式对象
+tag: 根元素标签，默认div
+validateEvent: 是否触发表单校验
+
+### 表单项属性（formItemProps）
+
+noLabel: 是否不显示标签
+labelPosition: 标签位置（left、right、top）
+subLabel: 副标签文本
+autoRules: 自动校验规则数组
+
+### 布局属性（layoutProps）
+
+span: 栅格占据的列数（1-24）
+alone: 是否独占一行
+
+## 事件配置
+
+Checkbox组件支持以下事件：
+change: 选中值变化时触发
+
+## 使用场景
+
+多选场景: 从多个选项中选择多个值
+标签选择: 选择多个标签
+分类选择: 选择多个分类
+
+## 注意事项
+
+field属性是必填的，用于数据绑定
+value为数组类型，存储选中项的value值
+options数组中的value值类型需与表单数据类型一致
+可通过border属性为选项添加边框样式
