@@ -1,91 +1,85 @@
-title: BdcComboInput组件
+title: BdcComboInput 组件示例模板
 description: BdcComboInput不动产证号输入快捷示例组件的用途和默认参数说明
 keywords: BdcComboInput,不动产证号,快捷组件,示例组件
-category: 组件菜单类
+category: 示例模板类
+---
+# BdcComboInput 不动产证号输入框示例模板
 
-# BdcComboInput组件
+## 模板用途
+BdcComboInput 并不是一个组件，而是针对不动产证号输入场景的快捷示例，专门用于不动产证号输入场景。
+BdcComboInput 由 ComboInput 组件实现，支持 ComboInput 组件的所有属性和配置能力。
+已预配置不动产证号的复合输入模板和校验规则，组合格式为：鄂(年份)宜昌市不动产权第编号号。
+- **不动产登记** - 在不动产登记表单中快速添加证号输入框
+- **房产信息** - 在房产信息表单中使用
+- **证件录入** - 在证件录入表单中使用
 
-## 组件概述
-
-BdcComboInput是快捷示例组件，基于ComboInput组件封装，专门用于不动产证号输入场景。已预配置复合输入模板和自定义校验规则。
-
-## 组件类型
-
-type: Inputer
-component: ComboInput
-menuRootKey: demo
-
-## 默认参数
-
-key: 空字符串（默认使用field值）
-field: bdcNo
-type: Inputer
-label: 不动产证号
-hidden: false
-value: 空字符串
-component: ComboInput
-componentProps:
-  template: [预配置的模板数组，包含年份选择器和编号输入框]
-  disabled: false
-componentEvent: 空对象
-formItemProps:
-  noLabel: false
-  labelPosition: right
-  subLabel: 空字符串
-  _d_rules: [动态校验规则配置，使用IMMEDIATE_EXECUTE类型]
-layoutProps:
-  span: 12
-  alone: false
-insideProps: 空对象
-outsideProps:
-  enable: false
-  direction: row
-  style: 空对象
-
-## 预配置特性
-
-### 字段配置
-
-field: 默认为bdcNo，适合不动产证号字段
-label: 默认为不动产证号，符合业务场景
-
-### 复合输入模板
-
-template: 预配置复合输入模板
-包含固定文本鄂(、)宜昌市不动产权第、号
-包含年份选择器，使用DatePicker组件，prop为year
-包含编号输入框，使用Input组件，prop为no
-最终组合格式为: 鄂(YYYY)宜昌市不动产权第XXXX号
-
-### 校验规则
-
-_d_rules: 预配置动态校验规则
-使用IMMEDIATE_EXECUTE类型
-通过正则表达式校验不动产证号格式
-校验规则: /^鄂\\((\\d{4})\\)\\s*宜昌市不动产权第(\\d+)\\s*号$/
-
-### 组件属性
-
-基于ComboInput组件，保持ComboInput的所有功能
-可根据需要修改componentProps中的属性
-
-## 使用场景
-
-不动产登记: 在不动产登记表单中使用
-房产信息: 在房产信息表单中使用
-证件录入: 在证件录入表单中使用
-
-## 自定义配置
-
-BdcComboInput组件可以像普通ComboInput组件一样进行配置
-可以修改label、field、componentProps等所有属性
-可以修改template数组调整输入模板结构
-可以修改校验规则适配不同的证件格式
-可以添加更多校验规则或事件处理函数
-
-## 注意事项
-
-BdcComboInput是基于ComboInput组件的快捷组件，功能与ComboInput相同
-预配置的模板和校验规则针对宜昌市不动产证号格式
-建议根据实际业务场景修改template和校验规则
-template中的prop属性用于数据绑定，需与表单字段对应
+## 模板内容
+```typescript
+const defaultSchema: DesignerFormSchema = {
+  key: '',
+  field: 'bdcNo',
+  type: 'Inputer',
+  label: '不动产证号',
+  hidden: false,
+  value: '',
+  component: 'ComboInput',
+  componentProps: {
+    template: [
+      { tag: 'span', content: '鄂(' },
+      {
+        tag: 'date-picker',
+        prop: 'year',
+        componentProps: {
+          type: 'year',
+          format: 'YYYY',
+          valueFormat: 'YYYY',
+          style: { width: '100px' },
+          placeholder: '年份',
+          prefixIcon: null
+        }
+      },
+      { tag: 'span', content: ')宜昌市不动产权第' },
+      {
+        tag: 'input',
+        prop: 'no',
+        componentProps: {
+          placeholder: '编号',
+          style: { width: '100px' }
+        }
+      },
+      { tag: 'span', content: '号' }
+    ],
+    disabled: false
+  },
+  componentEvent: {},
+  formItemProps: {
+    noLabel: false,
+    labelPosition: 'right',
+    subLabel: '',
+    _d_rules: {
+      enable: true,
+      prop: 'rules',
+      resolver: 'IMMEDIATE_EXECUTE',
+      value: `{{return [
+    {
+      required: true,
+      message: "请选择不动产权证的年份和编号",
+      validator: (_rule, value) =>
+        /^鄂\\((\\d{4})\\)\\s*宜昌市不动产权第(\\d+)\\s*号$/.test(String(value || "")),
+    }
+  ];
+}}`
+    }
+  },
+  layoutProps: {
+    span: 12,
+    alone: false
+  },
+  insideProps: {},
+  outsideProps: {
+    enable: false,
+    direction: 'row',
+    style: {}
+  }
+}
+```

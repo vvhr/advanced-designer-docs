@@ -2,103 +2,167 @@ title: ResolverValue数据结构
 description: ResolverValue核心数据结构说明，定义表单设计器的抽象函数可视化配置引擎的数据结构
 keywords: ResolverValue,动态属性,解析器,函数配置
 category: 数据结构类
-
-# ResolverValue数据结构
+---
 
 ## 概述
 
 ResolverValue是表单设计器中用于实现动态属性配置的核心数据结构。它通过抽象函数可视化配置引擎，将函数代码转换为可配置的动态属性。
 
-## 结构定义
+## 类型定义
 
-ResolverValue包含以下字段：
+```typescript
+interface ResolverValue {
+  enable: boolean           // 是否启用动态属性，默认false
+  value: any               // 动态属性的值内容，通常为函数代码字符串
+  prop: string             // 实际字段名，默认从_d_前缀后的字段名截取
+  resolver: DesignResolver // 解析方法类型
+}
 
-enable: 是否启用动态属性，布尔类型，默认false
-value: 动态属性的值内容，任意类型，通常为函数代码字符串
-prop: 实际字段名，字符串类型，默认从_d_前缀后的字段名截取
-resolver: 解析方法类型，DesignResolver类型，默认使用FORM_SCHEMA_FN
+// 解析器类型枚举
+type DesignResolver =
+  | 'FORM_SCHEMA_FN'        // 表单Schema函数
+  | 'COMPONENT_EVENT_FN'    // 组件事件函数
+  | 'IMMEDIATE_EXECUTE'     // 立即执行函数
+  | 'FORM_SCHEMA_DOM_FN'    // DOM渲染函数
+```
 
-## 解析方法类型
+## 解析器类型详解
 
-### FORM_SCHEMA_FN
+### FORM_SCHEMA_FN - 表单Schema函数
 
-类型标识: 'FORM_SCHEMA_FN'
-说明: 字段支持FormSchemaFn动态值，使用FnEditor编辑
-函数签名: (excontext: Recordable) => any
-用途: 在表单Schema函数中使用，返回动态属性值
-示例: _d_label、_d_hidden等属性
+```typescript
+// 函数签名
+type FormSchemaFn = (excontext: Recordable) => any
 
-### COMPONENT_EVENT_FN
+// 使用场景
+// - _d_label: 动态标签
+// - _d_hidden: 动态隐藏
+// - _d_disabled: 动态禁用
+// - _d_value: 动态值
+// - _d_rules: 动态校验规则
 
-类型标识: 'COMPONENT_EVENT_FN'
-说明: 字段支持ComponentEventFn动态值，使用FnEditor编辑
-函数签名: (event: ComponentEvent, excontext: Recordable) => void
-用途: 处理组件事件，如change、click等
-示例: componentEvent中的事件处理函数
+// 编辑器: FnEditor
+```
 
-### IMMEDIATE_EXECUTE
+### COMPONENT_EVENT_FN - 组件事件函数
 
-类型标识: 'IMMEDIATE_EXECUTE'
-说明: 字段不支持动态值也不支持常规类型，使用FnEditor自由编写
-函数签名: () => any
-用途: 执行立即执行的函数，返回任意值
-示例: 某些特殊场景下的函数执行
+```typescript
+// 函数签名
+type ComponentEventFn = (event: ComponentEvent, excontext: Recordable) => void
 
-### FORM_SCHEMA_DOM_FN
+// 使用场景
+// - componentEvent._d_onChange: 值改变事件
+// - componentEvent._d_onClick: 点击事件
+// - componentEvent._d_onBlur: 失焦事件
+// - componentEvent._d_onFocus: 聚焦事件
 
-类型标识: 'FORM_SCHEMA_DOM_FN'
-说明: 字段仅接收FormSchemaDomFn且需返回VNode，使用RenderDesigner编辑
-函数签名: (excontext: Recordable) => VNode
-用途: 返回VNode用于插槽渲染
-示例: insideProps.renders中的插槽渲染函数
+// 编辑器: FnEditor
+```
+
+### IMMEDIATE_EXECUTE - 立即执行函数
+
+```typescript
+// 函数签名
+type ImmediateExecuteFn = () => any
+
+// 使用场景
+// - formItems._d_rules
+
+// 编辑器: FnEditor（自由编写）
+```
+
+### FORM_SCHEMA_DOM_FN - DOM渲染函数
+
+```typescript
+// 函数签名
+type FormSchemaDomFn = (excontext: Recordable) => VNode
+
+// 使用场景
+// - outsideProps._d_prependRender
+// - outsideProps._d_appendRender
+
+// 编辑器: RenderDesigner（可视化VNode设计器）
+```
 
 ## 使用示例
 
-### 动态标签配置
+**动态标签配置:**
 
-```
-_d_label: {
+```typescript
+const resolverValue: ResolverValue = {
   enable: true,
-  value: '(excontext) => excontext.userName || "姓名"',
+  value: '{{ excontext.userName || "姓名" }}',
   prop: 'label',
   resolver: 'FORM_SCHEMA_FN'
 }
-```
 
-### 动态隐藏配置
-
-```
-_d_hidden: {
-  enable: true,
-  value: '(excontext) => excontext.userRole === "admin"',
-  prop: 'hidden',
-  resolver: 'FORM_SCHEMA_FN'
+// 在DesignerFormSchema中使用
+const schema = {
+  field: 'name',
+  component: 'Input',
+  label: '姓名',
+  _d_label: resolverValue  // 动态标签
 }
 ```
 
-### 事件处理函数配置
+**动态隐藏配置:**
 
+```typescript
+const resolverValue: ResolverValue = {
+  enable: true,
+  value: '{{ excontext.userRole === "admin" }}',
+  prop: 'hidden',
+  resolver: 'FORM_SCHEMA_FN'
+}
+
+// 在DesignerFormSchema中使用
+const schema = {
+  field: 'secretField',
+  component: 'Input',
+  label: '机密字段',
+  _d_hidden: resolverValue  // 仅管理员可见
+}
 ```
-componentEvent: {
-  change: {
-    enable: true,
-    value: '(event, excontext) => { console.log(event); excontext.handleChange(event); }',
-    prop: 'change',
-    resolver: 'COMPONENT_EVENT_FN'
+
+**事件处理函数配置:**
+
+```typescript
+const resolverValue: ResolverValue = {
+  enable: true,
+  value: '{{ console.log(event); excontext.handleChange(event); }}',
+  prop: 'change',
+  resolver: 'COMPONENT_EVENT_FN'
+}
+
+// 在DesignerFormSchema中使用
+const schema = {
+  field: 'email',
+  component: 'Input',
+  label: '邮箱',
+  componentEvent: {
+    change: resolverValue  // change事件处理
   }
 }
 ```
 
-### 插槽渲染函数配置
+**插槽渲染函数配置:**
 
-```
-insideProps: {
-  renders: {
-    prefix: {
-      enable: true,
-      value: '(excontext) => h("span", "前缀")',
-      prop: 'prefix',
-      resolver: 'FORM_SCHEMA_DOM_FN'
+```typescript
+const resolverValue: ResolverValue = {
+  enable: true,
+  value: '{{ h("span", { class: "prefix-icon" }, "📧") }}',
+  prop: 'prefix',
+  resolver: 'FORM_SCHEMA_DOM_FN'
+}
+
+// 在DesignerFormSchema中使用
+const schema = {
+  field: 'email',
+  component: 'Input',
+  label: '邮箱',
+  insideProps: {
+    renders: {
+      prefix: resolverValue  // 前缀插槽
     }
   }
 }
@@ -106,13 +170,35 @@ insideProps: {
 
 ## 解析流程
 
-设计器配置阶段: 用户通过可视化编辑器配置ResolverValue
-Schema解析阶段: schema-resolver工具函数将ResolverValue转换为实际的函数
-运行时执行: 在表单渲染时执行函数，获取动态值
+```typescript
+// 1. 设计器配置阶段
+// 用户通过可视化编辑器配置ResolverValue
+const designerSchema = {
+  field: 'name',
+  _d_label: {
+    enable: true,
+    value: '{{ excontext.title }}',
+    prop: 'label',
+    resolver: 'FORM_SCHEMA_FN'
+  }
+}
+
+// 2. Schema解析阶段
+// schema-resolver工具函数将ResolverValue转换为实际的函数
+const runtimeSchema = {
+  field: 'name',
+  label: (formModel, column, disabled, excontext) => excontext.title  // 转换为函数
+}
+
+// 3. 运行时执行
+// 在表单渲染时执行函数，获取动态值
+const labelValue = runtimeSchema.label({ title: '用户姓名' })  // '用户姓名'
+```
 
 ## 注意事项
 
-ResolverValue的value字段存储的是函数代码字符串
-函数代码会在运行时通过new Function或eval执行，需注意安全性
-prop字段用于指定实际字段名，如果不指定则从_d_前缀后截取
-enable字段控制是否启用动态属性，false时使用静态值
+- ResolverValue的`value`字段存储的是函数代码字符串
+- 函数代码会在运行时通过`new Function`或`eval`执行，需注意安全性
+- `prop`字段用于指定实际字段名，如果不指定则从`_d_`前缀后截取
+- `enable`字段控制是否启用动态属性，`false`时使用静态值
+- 不同的`resolver`类型对应不同的函数签名和编辑器
