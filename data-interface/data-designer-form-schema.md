@@ -5,8 +5,12 @@ category: 数据结构类
 ---
 
 ## 概述
+DesignerFormSchema 是低代码表单设计器的标准化核心可序列化 JSON 配置载体，继承 AeForm 组件的 FormSchemaBase 类型，为其中无法直接 JSON 描述的属性添加_d_前缀标识并绑定 ResolverValue 结构；该结构支持以文本化 JS 代码表达式配置存储抽象属性值，且通过 resolver 属性区分方法函数的入参规则与运行机制，解决了表单组件普通与特殊属性的统一配置、存储及解析问题。
 
-DesignerFormSchema是表单设计器的核心数据结构，定义了表单中每个组件的完整配置信息。它继承自FormSchemaBase，并扩展了动态属性配置能力。
+- DesignerFormSchema 会被转换为 FormSchemaBase 用于运行时渲染
+- 特殊类型或需要动态返回的属性通过 `_d_` 前缀存储, 并通过 ResolverValue 结构赋值
+- `__d_locked` 属性仅在设计器内部使用，不影响运行时
+- 若 `_d_` 属性与普通属性名同时存在时, `_d_`属性将会覆盖普通属性, 比如 `_d_label` 将覆盖 `label`
 
 ## 类型定义
 
@@ -46,7 +50,7 @@ interface DesignerFormSchema extends FormSchemaBase {
 }
 ```
 
-## 动态属性机制
+## 特殊属性机制
 
 DesignerFormSchema支持通过 `_d_` 前缀实现动态属性配置。动态属性使用 ResolverValue 类型：
 
@@ -60,42 +64,38 @@ interface ResolverValue {
 ```
 
 **解析器类型说明:**
-- `FORM_SCHEMA_FN` - 表单函数，接收 excontext 参数
-- `COMPONENT_EVENT_FN` - 组件事件函数，接收事件参数
-- `IMMEDIATE_EXECUTE` - 立即执行函数
-- `FORM_SCHEMA_DOM_FN` - DOM渲染函数
+- `FORM_SCHEMA_FN`: 任何需要动态化的属性值, 方法入参为: formModel, column, disabled, excontext
+- `COMPONENT_EVENT_FN` - 专用于描述组件事件函数的解析器, 方法入参为: event, formModel, column, disabled, excontext
+- `IMMEDIATE_EXECUTE` - 该属性并不需要在运行时动态取值时, 直接运行该方法(无参数), 获取返回值作为属性值.
+- `FORM_SCHEMA_DOM_FN` - 基于特殊的JSON配置来返回DOM元素, 适用于render类型的属性.
 
 ## 嵌套属性详解
 
 **componentProps** - 组件属性配置
 - 包含组件特有的属性，如 Input 的 placeholder、Select 的 options 等
-- 支持动态属性配置
+- 支持动态属性配置，如 _d_disabled, _d_style
 
 **componentEvent** - 组件事件配置
 - 键名为事件名，值为 ResolverValue 类型的事件处理函数配置
-- 例如: change、click、blur 等事件
+- 例如: _d_onChange、_d_onClick、_d_onBlur 等事件
 
 **formItemProps** - 表单项属性配置
 - 包含表单项的配置，如 noLabel、labelPosition、autoRules 等
-- 支持动态属性配置
+- 支持动态属性配置, 如 _d_rules
 
 **layoutProps** - 布局属性配置
 - 包含组件的布局配置，如 span、alone 等
-- 支持动态属性配置
 
 **outsideProps** - 外部属性配置
 - 包含组件外层的包装配置，如 enable、direction、style 等
-- 支持动态属性配置
+- 支持动态属性配置, 如 _d_prependRender, _d_appendRender
 
-**insideProps** - 内部属性配置
-- 包含 renders 等插槽配置
-- renders 类型为 DesignerDynamicProps，用于配置组件的插槽内容
+**insideProps.renders** - 组件内部插槽配置
+- 根据 component 决定组件内部提供了哪些插槽
 
-## 使用示例
-
-**基础组件配置:**
-
+## 基础组件配置
 ```typescript
+// 所有属性值都是静态值且无特殊类型时
 const schema: DesignerFormSchema = {
   key: 'input1',
   field: 'name',
@@ -111,9 +111,9 @@ const schema: DesignerFormSchema = {
 }
 ```
 
-**动态属性配置:**
-
+## 特殊类型的属性配置
 ```typescript
+// label属性需要动态化返回时, 新建_d_label属性.
 const schema: DesignerFormSchema = {
   key: 'input1',
   field: 'name',
@@ -122,16 +122,16 @@ const schema: DesignerFormSchema = {
   label: '姓名',
   _d_label: {
     enable: true,
-    value: '(excontext) => excontext.userName || "姓名"',
+    value: '{{ excontext.userName || "姓名" }}',
     prop: 'label',
     resolver: 'FORM_SCHEMA_FN'
   }
 }
 ```
 
-**容器组件配置:**
-
+## 容器组件配置
 ```typescript
+// 容器组件必须是 Container, 并必须拥有 children 属性
 const schema: DesignerFormSchema = {
   key: 'group1',
   field: '',
@@ -150,9 +150,3 @@ const schema: DesignerFormSchema = {
 }
 ```
 
-## 注意事项
-
-- DesignerFormSchema 会被转换为 FormSchemaBase 用于运行时渲染
-- 动态属性通过 schema-resolver 工具函数进行解析和转换
-- 配置错误可能导致组件无法正常渲染，需注意数据结构的正确性
-- `__d_locked` 属性仅在设计器内部使用，不影响运行时

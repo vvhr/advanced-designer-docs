@@ -5,8 +5,15 @@ category: 数据结构类
 ---
 
 ## 概述
+FormSchemaBase是advanced-ele-ui组件库中AeForm组件使用的核心数据结构，定义了表单组件的配置基础。
+在表单设计器项目中，DesignerFormSchema继承自FormSchemaBase并扩展了文本化存储特殊属性能力。
 
-FormSchemaBase是advanced-ele-ui中AeForm组件使用的核心数据结构，定义了表单组件的配置基础。DesignerFormSchema继承自FormSchemaBase并扩展了动态属性能力。
+- FormSchemaBase是运行时使用的数据结构，在表单设计器项目中DesignerFormSchema会被转换为FormSchemaBase
+- 函数式属性在运行时执行，需要注意执行顺序和依赖关系
+- 表达式属性通过new Function构建并执行，需注意安全性
+- 某些属性仅对特定类型的组件生效，需注意类型限制
+- `key`属性未设置时会默认使用`field`值，非输入性组件必须设置`key`
+
 
 ## 类型定义
 
@@ -45,18 +52,38 @@ type FormSchemaType =
 ## 函数类型定义
 
 ```typescript
-// 表单Schema函数
-type FormSchemaFn<T> = (
-  form: Recordable,        // 表单数据
-  column: FormSchema,      // 当前配置
-  disabled: boolean,       // 是否禁用
-  excontext: Recordable    // 外部上下文
+/**
+ * 动态取值函数
+ * @description 基于某种逻辑动态取值
+ * @param form - 表单数据对象
+ * @param column - 当前列配置
+ * @param disabled - 表单自身是否禁用
+ * @param excontext - 表单数据源上下文
+ */
+export type FormSchemaFn<T> = (
+  form: Recordable,
+  column: FormSchema,
+  disabled: boolean,
+  excontext: Recordable
 ) => T
 
 // DOM渲染函数
-type FormSchemaDomFn = (
-  excontext: Recordable    // 外部上下文
-) => VNode
+/**
+ * 动态取VNode函数
+ * @description 基于某种逻辑动态取值
+ * @param form - 表单数据对象
+ * @param column - 当前列配置
+ * @param disabled - 表单自身是否禁用
+ * @param excontext - 表单数据源上下文
+ * @param slotProps - 插槽自身携带的参数（作用域插槽参数）
+ */
+export type FormSchemaDomFn<T> = (
+  form: Recordable,
+  column: FormSchema,
+  disabled: boolean,
+  excontext: Recordable,
+  ...slotProps: any[]
+) => T
 ```
 
 ## 类型详解
@@ -151,11 +178,3 @@ const schema: FormSchemaBase = {
   }
 }
 ```
-
-## 注意事项
-
-- FormSchemaBase是运行时使用的数据结构，DesignerFormSchema会被转换为FormSchemaBase
-- 函数式属性在运行时执行，需要注意执行顺序和依赖关系
-- 表达式属性通过eval执行，需注意安全性
-- 某些属性仅对特定类型的组件生效，需注意类型限制
-- `key`属性未设置时会默认使用`field`值，非输入性组件必须设置`key`

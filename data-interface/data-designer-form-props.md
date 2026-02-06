@@ -5,11 +5,16 @@ category: 数据结构类
 ---
 
 ## 概述
-
 DesignerFormProps定义了表单设计器提供的表单全局属性配置，影响整个表单的展示和行为。这些属性会传递给AeForm组件。
 
-## 类型定义
+- DesignerFormProps会直接传递给AeForm组件
+- 某些属性的修改会影响整个表单的行为
+- 建议在表单设置面板中配置，避免直接编辑JSON
+- `designable`属性在设计器中自动管理，通常不需要手动设置
+- 当前表单设计器不支持设置`stepValue`
+- 当前表单设计器不支持设置`type='desc'`模式
 
+## 类型定义
 ```typescript
 interface DesignerFormProps {
   stepValue?: number | null              // 分步表单的当前激活步骤索引，默认null
@@ -25,7 +30,6 @@ interface DesignerFormProps {
 ```
 
 ## 属性详解
-
 **stepValue** - 分步表单步骤索引
 - 类型: `number | null`
 - 默认值: `null`
@@ -79,70 +83,3 @@ interface DesignerFormProps {
 - 默认值: `false`
 - 用途: 控制字段的自动初始化行为
 - 说明: 启用后会自动将schema中的value值初始化到表单数据中
-
-## 使用示例
-
-**基础表单配置:**
-
-```typescript
-const formProps: DesignerFormProps = {
-  type: 'form',
-  size: 'default',
-  disabled: false,
-  labelWidth: '120px',
-  showErrorNotice: true,
-  autoInitField: false
-}
-```
-
-**分步表单配置:**
-
-```typescript
-const formProps: DesignerFormProps = {
-  type: 'form',
-  stepValue: 0,           // 当前在第一步
-  size: 'default',
-  disabled: false,
-  labelWidth: '100px'
-}
-```
-
-**描述列表模式:**
-
-```typescript
-const formProps: DesignerFormProps = {
-  type: 'desc',           // 描述列表模式
-  size: 'default',
-  labelWidth: '150px'
-}
-```
-
-**小尺寸表单:**
-
-```typescript
-const formProps: DesignerFormProps = {
-  type: 'form',
-  size: 'small',          // 小尺寸
-  labelWidth: '80px',
-  showErrorNotice: true
-}
-```
-
-**禁用状态表单:**
-
-```typescript
-const formProps: DesignerFormProps = {
-  type: 'form',
-  disabled: true,         // 整个表单禁用
-  size: 'default',
-  labelWidth: '120px'
-}
-```
-
-## 注意事项
-
-- DesignerFormProps会直接传递给AeForm组件
-- 某些属性的修改会影响整个表单的行为
-- 建议在表单设置面板中配置，避免直接编辑JSON
-- `designable`属性在设计器中自动管理，通常不需要手动设置
-- `stepValue`仅在使用Step类型的schema时生效
